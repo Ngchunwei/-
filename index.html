@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>笑佛缘员工评分系统导航</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f5f2;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 40px;
+        }
+        .card-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .card {
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+        .card.chef {
+            background-color: #ffebee;
+        }
+        .card.assistant {
+            background-color: #fff3e0;
+        }
+        .card.service {
+            background-color: #e3f2fd;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+        .card h2 {
+            margin-top: 0;
+            color: #333;
+            font-size: 1.5em;
+        }
+        .card p {
+            color: #666;
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>笑佛缘员工评分系统</h1>
+    
+    <div class="card-container">
+        <a href="厨师index.html" class="card chef">
+            <h2>👨‍🍳 厨师评分系统</h2>
+            <p>用于评估厨师的专业技能、工作态度、卫生习惯等多个方面的表现。</p>
+        </a>
+        
+        <a href="厨房助手index.html" class="card assistant">
+            <h2>👨‍🔧 厨房助手评分系统</h2>
+            <p>评估厨房助手在协助工作、清洁维护、工作效率等方面的表现。</p>
+        </a>
+        
+        <a href="楼面index.html" class="card service">
+            <h2>👨‍💼 楼面评分系统</h2>
+            <p>评估楼面服务人员的服务质量、客户互动、团队协作等方面的表现。</p>
+        </a>
+    </div>
+</body>
+</html>

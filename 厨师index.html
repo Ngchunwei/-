@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>厨房员工(厨师)评分系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .section {
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .stars {
+            color: #ffd700;
+            cursor: pointer;
+        }
+        .stars span {
+            padding: 0 2px;
+        }
+        .stars span:hover ~ span {
+            color: #ddd;
+        }
+        .total-score {
+            font-size: 1.2em;
+            font-weight: bold;
+            text-align: right;
+            padding: 20px;
+        }
+        .category-score {
+            font-weight: bold;
+            color: #666;
+        }
+        <style>
+        .employee-info {
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .employee-info input {
+            padding: 8px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .employee-info span {
+            color: #666;
+        }
+        .share-button {
+            background-color: #25D366;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-left: 10px;
+        }
+        .share-button:hover {
+            background-color: #128C7E;
+        }
+        </style>
+    </style>
+</head>
+<body>
+    <h1>厨房员工(厨师)评分系统</h1>
+    
+    <div class="employee-info">
+        <input type="text" id="employeeName" placeholder="员工姓名" />
+        <span id="evaluationDate"></span>
+        <button class="share-button" onclick="shareToWhatsApp()">分享到WhatsApp</button>
+    </div>
+    
+    <div class="section">
+        <p>评分标准：</p>
+        <p>1 ☆：不达标，需要显著改进<br>
+           2 ☆☆：基本达标，有较大改进空间<br>
+           3 ☆☆☆：达标，符合基本要求<br>
+           4 ☆☆☆☆：优秀，超出预期<br>
+           5 ☆☆☆☆☆：卓越，树立标杆</p>
+    </div>
+
+    <div id="scorecard"></div>
+
+    <div class="total-score">
+        总分：<span id="finalScore">0</span>
+    </div>
+
+    <script>
+        const sections = [
+            {
+                title: '1. 食品准备质量和一致性',
+                weight: 0.25,
+                items: [{
+                    category: '',
+                    criteria: [
+                        '同一菜品在不同时间制作是否保持一致的口味',
+                        '是否严格按照食谱和标准程序操作',
+                        '菜品摆盘是否美观',
+                        '装盘是否干净整洁',
+                        '素菜是否恰当烹调（不过咸或过甜太淡）',
+                        '温度控制是否适当',
+                        '质地是否符合预期',
+                        '因菜品质量问题被退回的频率'
+                    ]
+                }],
+            },
+            {
+                title: '2. 对素食食材处理的专业性',
+                weight: 0.20,
+                items: [{
+                    category: '',
+                    criteria: [
+                        '是否了解不同素食食材的特性和最佳处理方法',
+                        '是否能恰当处理蔬菜、菌类、斋料等素食主要食材',
+                        '是否能灵活替代食材以满足特殊需求',
+                        '是否注意食材的新鲜度'
+                    ]
+                }]
+            },
+            {
+                title: '3. 厨房卫生标准',
+                weight: 0.15,
+                items: [{
+                    category: '',
+                    criteria: [
+                        '个人卫生（手部清洁、帽子、口罩使用情况）',
+                        '工作台清洁频率和标准',
+                        '刀具和设备的清洁和消毒',
+                        '食材存储是否符合规范'
+                    ]
+                }]
+            },
+            {
+                title: '4. 食材管理和减少浪费',
+                weight: 0.15,
+                items: [{
+                    category: '',
+                    criteria: [
+                        '是否合理规划食材用量，减少浪费',
+                        '是否善于利用剩余食材创造新菜品',
+                        '是否注意食材保鲜和正确存储',
+                        '是否准确预估每日所需食材量（不买过多或过少）',
+                        '是否定期检查库存并适时使用接近保质期的食材'
+                    ]
+                }]
+            },
+            {
+                title: '5. 工作效率和出餐速度',
+                weight: 0.15,
+                items: [{
+                    category: '',
+                    criteria: [
+                        '平均出餐时间是否符合标准',
+                        '是否能在繁忙时段保持高效率',
+                        '是否合理安排多个订单的制作顺序',
+                        '是否有效使用厨房设备提高效率',
+                        '面对突发情况是否能迅速调整工作流程'
+                    ]
+                }]
+            },
+            {
+                title: '6. 创造力',
+                weight: 0.10,
+                items: [{
+                    category: '',
+                    criteria: [
+                        '是否定期提出新的素食菜品创意',
+                        '是否能改进现有菜品提升品质',
+                        '是否参与菜单更新和开发',
+                        '是否愿意学习新的烹饪技巧和知识'
+                    ]
+                }]
+            }
+        ];
+
+        function createStarRating(id) {
+            const stars = document.createElement('div');
+            stars.className = 'stars';
+            stars.id = id;
+            for (let i = 0; i < 5; i++) {
+                const star = document.createElement('span');
+                star.textContent = '☆';
+                star.dataset.value = i + 1;
+                star.onclick = function() {
+                    const parent = this.parentElement;
+                    const spans = parent.getElementsByTagName('span');
+                    const clickedValue = this.dataset.value;
+                    for (let j = 0; j < spans.length; j++) {
+                        spans[j].textContent = j < clickedValue ? '★' : '☆';
+                    }
+                    parent.dataset.rating = clickedValue;
+                    calculateTotalScore();
+                };
+                stars.appendChild(star);
+            }
+            return stars;
+        }
+
+        function calculateTotalScore() {
+            let totalScore = 0;
+            sections.forEach((section, sectionIndex) => {
+                let sectionScore = 0;
+                let criteriaCount = 0;
+                
+                section.items.forEach(item => {
+                    let categoryScore = 0;
+                    let categoryCriteriaCount = 0;
+                    
+                    item.criteria.forEach((criterion, criterionIndex) => {
+                        const starDiv = document.getElementById(`stars-${sectionIndex}-${criterionIndex}`);
+                        const rating = parseInt(starDiv.dataset.rating || 0);
+                        categoryScore += rating;
+                        categoryCriteriaCount++;
+                    });
+                    
+                    if (categoryCriteriaCount > 0) {
+                        sectionScore += categoryScore;
+                        criteriaCount += categoryCriteriaCount;
+                    }
+                });
+            
+                const averageSectionScore = (sectionScore / criteriaCount) * 20; // 转换为100分制
+                const weightedSectionScore = averageSectionScore * section.weight;
+                totalScore += weightedSectionScore;
+            
+                // 更新分类得分
+                const sectionScoreElement = document.getElementById(`section-score-${sectionIndex}`);
+                sectionScoreElement.textContent = `得分：${averageSectionScore.toFixed(2)}/100分`;
+            });
+    
+            document.getElementById('finalScore').textContent = totalScore.toFixed(2);
+        }
+
+        function renderScorecard() {
+            // 设置评分日期
+            const today = new Date();
+            document.getElementById('evaluationDate').textContent = `评分日期：${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
+            
+            const scorecard = document.getElementById('scorecard');
+            
+            sections.forEach((section, sectionIndex) => {
+                const sectionDiv = document.createElement('div');
+                sectionDiv.className = 'section';
+                
+                const header = document.createElement('h2');
+                header.textContent = `${section.title} (${section.weight * 100}%权重)`;
+                sectionDiv.appendChild(header);
+
+                const sectionScore = document.createElement('div');
+                sectionScore.className = 'category-score';
+                sectionScore.id = `section-score-${sectionIndex}`;
+                sectionScore.textContent = '得分：0.00';
+                sectionDiv.appendChild(sectionScore);
+
+                const table = document.createElement('table');
+                
+                section.items.forEach(item => {
+                    if (item.category) {
+                        const categoryRow = document.createElement('tr');
+                        const categoryCell = document.createElement('th');
+                        categoryCell.colSpan = 2;
+                        categoryCell.textContent = item.category;
+                        categoryRow.appendChild(categoryCell);
+                        table.appendChild(categoryRow);
+                    }
+
+                    item.criteria.forEach((criterion, criterionIndex) => {
+                        const row = document.createElement('tr');
+                        
+                        const criterionCell = document.createElement('td');
+                        criterionCell.textContent = criterion;
+                        row.appendChild(criterionCell);
+                        
+                        const ratingCell = document.createElement('td');
+                        ratingCell.appendChild(createStarRating(`stars-${sectionIndex}-${criterionIndex}`));
+                        row.appendChild(ratingCell);
+                        
+                        table.appendChild(row);
+                    });
+                });
+
+                sectionDiv.appendChild(table);
+                scorecard.appendChild(sectionDiv);
+            });
+        }
+
+        renderScorecard();
+    </script>
+</body>
+</html>
+
+<script>
+        function shareToWhatsApp() {
+            const employeeName = document.getElementById('employeeName').value;
+            if (!employeeName) {
+                alert('请先输入员工姓名');
+                return;
+            }
+            
+            let message = `厨房(厨师)的评分结果\n员工：${employeeName}\n`;
+            message += `评分日期：${document.getElementById('evaluationDate').textContent.split('：')[1]}\n\n`;
+            
+            sections.forEach((section, index) => {
+                const score = document.getElementById(`section-score-${index}`).textContent.split('：')[1];
+                message += `${index + 1}. ${section.title.split('.')[1]}: ${score}\n`;
+            });
+            
+            message += `\n总分：${document.getElementById('finalScore').textContent}`;
+            
+            const encodedMessage = encodeURIComponent(message);
+            window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
+        }
+</script>

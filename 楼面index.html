@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>楼面员工评分系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .section {
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .stars {
+            color: #ffd700;
+            cursor: pointer;
+        }
+        .stars span {
+            padding: 0 2px;
+        }
+        .stars span:hover ~ span {
+            color: #ddd;
+        }
+        .total-score {
+            font-size: 1.2em;
+            font-weight: bold;
+            text-align: right;
+            padding: 20px;
+        }
+        .category-score {
+            font-weight: bold;
+            color: #666;
+        }
+        <style>
+        .employee-info {
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .employee-info input {
+            padding: 8px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .employee-info span {
+            color: #666;
+        }
+        .share-button {
+            background-color: #25D366;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-left: 10px;
+        }
+        .share-button:hover {
+            background-color: #128C7E;
+        }
+        </style>
+    </style>
+</head>
+<body>
+    <h1>楼面员工评分系统</h1>
+    
+    <div class="employee-info">
+        <input type="text" id="employeeName" placeholder="员工姓名" />
+        <span id="evaluationDate"></span>
+        <button class="share-button" onclick="shareToWhatsApp()">分享到WhatsApp</button>
+    </div>
+    
+    <div class="section">
+        <p>评分标准：</p>
+        <p>1 ☆：不达标，需要显著改进<br>
+           2 ☆☆：基本达标，有较大改进空间<br>
+           3 ☆☆☆：达标，符合基本要求<br>
+           4 ☆☆☆☆：优秀，超出预期<br>
+           5 ☆☆☆☆☆：卓越，树立标杆</p>
+    </div>
+
+    <div id="scorecard"></div>
+
+    <div class="total-score">
+        总分：<span id="finalScore">0</span>
+    </div>
+
+    <script>
+        const sections = [
+            {
+                title: '1. 客户服务质量和态度',
+                weight: 0.25,
+                items: [{
+                    category: '',
+                    criteria: [
+                        '是否主动迎接顾客并引导就座',
+                        '是否定期回访桌台查看顾客需求',
+                        '是否能预判顾客需求（如及时添水、更换餐具）',
+                        '是否使用适当的礼貌用语（你好、请、谢谢、不客气）',
+                        '是否保持恰当的眼神接触',
+                        '是否始终保持微笑和温和语调',
+                        '繁忙时段是否仍能保持礼貌专业态度',
+                        '面对抱怨时是否冷静处理',
+                        '着装整洁，符合餐厅标准',
+                        '个人卫生良好（头发整理、手部清洁等）'
+                    ]
+                }],
+            },
+            {
+                title: '2. 对素食菜单的了解程度',
+                weight: 0.15,
+                items: [{
+                    category: '',
+                    criteria: [
+                        '是否能准确描述菜制作方法和口味特点',
+                        '是否能识别不同类型的素食（如纯素、奶蛋素食等）',
+                        '是否能推荐适合不同饮食需求的菜品',
+                        '是否了解某些食物烹煮的复杂性（在繁忙时段不推荐复杂性食物）'
+                    ]
+                }]
+            },
+            {
+                title: '3. 处理顾客特殊需求的能力',
+                weight: 0.15,
+                items: [{
+                    category: '',
+                    criteria: [
+                        '是否愿意并能够回答顾客关于素食的问题',
+                        '是否能恰当处理儿童、老人等特殊群体的需求',
+                        '面对无理要求时是否能寻求折中方案'
+                    ]
+                }]
+            },
+            {
+                title: '4. 点餐准确性和效率',
+                weight: 0.15,
+                items: [{
+                    category: '',
+                    criteria: [
+                        '点餐错误率（月统计）',
+                        '平均点餐所需时间',
+                        '是否会复述订单确认准确性',
+                        '是否正确输入特殊要求到POS系统',
+                        '是否在适当时机建议增加配菜、饮料等'
+                    ]
+                }]
+            },
+            {
+                title: '5. 团队协作能力',
+                weight: 0.15,
+                items: [{
+                    category: '',
+                    criteria: [
+                        '是否主动帮助同事处理繁忙区域',
+                        '是否有效与厨房沟通客户的特殊需求',
+                        '是否能妥善处理与同事间的冲突',
+                        '是否分享有用信息和经验给团队'
+                    ]
+                }]
+            },
+            {
+                title: '6. 餐厅清洁维护',
+                weight: 0.15,
+                items: [{
+                    category: '',
+                    criteria: [
+                        '是否及时清理和重置餐桌',
+                        '是否每天保持指定区域的整洁',
+                        '是否注意到并处理餐厅内各区域的杂物或脏污',
+                        '是否按标准整理餐具和用品',
+                        '是否遵循餐厅卫生规范（如洗手、佩戴适当的防护用品）'
+                    ]
+                }]
+            }
+        ];
+
+        function createStarRating(id) {
+            const stars = document.createElement('div');
+            stars.className = 'stars';
+            stars.id = id;
+            for (let i = 0; i < 5; i++) {
+                const star = document.createElement('span');
+                star.textContent = '☆';
+                star.dataset.value = i + 1;
+                star.onclick = function() {
+                    const parent = this.parentElement;
+                    const spans = parent.getElementsByTagName('span');
+                    const clickedValue = this.dataset.value;
+                    for (let j = 0; j < spans.length; j++) {
+                        spans[j].textContent = j < clickedValue ? '★' : '☆';
+                    }
+                    parent.dataset.rating = clickedValue;
+                    calculateTotalScore();
+                };
+                stars.appendChild(star);
+            }
+            return stars;
+        }
+
+        function calculateTotalScore() {
+            let totalScore = 0;
+            sections.forEach((section, sectionIndex) => {
+                let sectionScore = 0;
+                let criteriaCount = 0;
+                
+                section.items.forEach(item => {
+                    let categoryScore = 0;
+                    let categoryCriteriaCount = 0;
+                    
+                    item.criteria.forEach((criterion, criterionIndex) => {
+                        const starDiv = document.getElementById(`stars-${sectionIndex}-${criterionIndex}`);
+                        const rating = parseInt(starDiv.dataset.rating || 0);
+                        categoryScore += rating;
+                        categoryCriteriaCount++;
+                    });
+                    
+                    if (categoryCriteriaCount > 0) {
+                        sectionScore += categoryScore;
+                        criteriaCount += categoryCriteriaCount;
+                    }
+                });
+            
+                const averageSectionScore = (sectionScore / criteriaCount) * 20; // 转换为100分制
+                const weightedSectionScore = averageSectionScore * section.weight;
+                totalScore += weightedSectionScore;
+            
+                // 更新分类得分
+                const sectionScoreElement = document.getElementById(`section-score-${sectionIndex}`);
+                sectionScoreElement.textContent = `得分：${averageSectionScore.toFixed(2)}/100分`;
+            });
+    
+            document.getElementById('finalScore').textContent = totalScore.toFixed(2);
+        }
+
+        function renderScorecard() {
+            // 设置评分日期
+            const today = new Date();
+            document.getElementById('evaluationDate').textContent = `评分日期：${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
+            
+            const scorecard = document.getElementById('scorecard');
+            
+            sections.forEach((section, sectionIndex) => {
+                const sectionDiv = document.createElement('div');
+                sectionDiv.className = 'section';
+                
+                const header = document.createElement('h2');
+                header.textContent = `${section.title} (${section.weight * 100}%权重)`;
+                sectionDiv.appendChild(header);
+
+                const sectionScore = document.createElement('div');
+                sectionScore.className = 'category-score';
+                sectionScore.id = `section-score-${sectionIndex}`;
+                sectionScore.textContent = '得分：0.00';
+                sectionDiv.appendChild(sectionScore);
+
+                const table = document.createElement('table');
+                
+                section.items.forEach(item => {
+                    if (item.category) {
+                        const categoryRow = document.createElement('tr');
+                        const categoryCell = document.createElement('th');
+                        categoryCell.colSpan = 2;
+                        categoryCell.textContent = item.category;
+                        categoryRow.appendChild(categoryCell);
+                        table.appendChild(categoryRow);
+                    }
+
+                    item.criteria.forEach((criterion, criterionIndex) => {
+                        const row = document.createElement('tr');
+                        
+                        const criterionCell = document.createElement('td');
+                        criterionCell.textContent = criterion;
+                        row.appendChild(criterionCell);
+                        
+                        const ratingCell = document.createElement('td');
+                        ratingCell.appendChild(createStarRating(`stars-${sectionIndex}-${criterionIndex}`));
+                        row.appendChild(ratingCell);
+                        
+                        table.appendChild(row);
+                    });
+                });
+
+                sectionDiv.appendChild(table);
+                scorecard.appendChild(sectionDiv);
+            });
+        }
+
+        renderScorecard();
+    </script>
+</body>
+</html>
+
+<script>
+        function shareToWhatsApp() {
+            const employeeName = document.getElementById('employeeName').value;
+            if (!employeeName) {
+                alert('请先输入员工姓名');
+                return;
+            }
+            
+            let message = `楼面员工的评分结果\n员工：${employeeName}\n`;
+            message += `评分日期：${document.getElementById('evaluationDate').textContent.split('：')[1]}\n\n`;
+            
+            sections.forEach((section, index) => {
+                const score = document.getElementById(`section-score-${index}`).textContent.split('：')[1];
+                message += `${index + 1}. ${section.title.split('.')[1]}: ${score}\n`;
+            });
+            
+            message += `\n总分：${document.getElementById('finalScore').textContent}`;
+            
+            const encodedMessage = encodeURIComponent(message);
+            window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
+        }
+</script>
