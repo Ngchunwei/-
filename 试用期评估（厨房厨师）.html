@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>厨房厨师试用期评估表</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .section {
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .stars {
+            color: #ffd700;
+            cursor: pointer;
+        }
+        .stars span {
+            padding: 0 2px;
+        }
+        .stars span:hover ~ span {
+            color: #ddd;
+        }
+        .total-score {
+            font-size: 1.2em;
+            font-weight: bold;
+            text-align: right;
+            padding: 20px;
+        }
+        .category-score {
+            font-weight: bold;
+            color: #666;
+        }
+        <style>
+        .employee-info {
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .employee-info input {
+            padding: 8px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .employee-info span {
+            color: #666;
+        }
+        .share-button {
+            background-color: #25D366;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-left: 10px;
+        }
+        .share-button:hover {
+            background-color: #128C7E;
+        }
+        </style>
+    </style>
+</head>
+<body>
+    <h1>厨房厨师试用期评估表</h1>
+    
+    <div class="employee-info">
+        <input type="text" id="employeeName" placeholder="员工姓名" />
+        <span id="evaluationDate"></span>
+        <button class="share-button" onclick="shareToWhatsApp()">分享到WhatsApp</button>
+    </div>
+    
+    <div class="section">
+        <p>评分标准：</p>
+        <p>1 ☆：不达标，需要显著改进<br>
+           2 ☆☆：基本达标，有较大改进空间<br>
+           3 ☆☆☆：达标，符合基本要求<br>
+           4 ☆☆☆☆：优秀，超出预期<br>
+           5 ☆☆☆☆☆：卓越，树立标杆</p>
+    </div>
+
+    <div id="scorecard"></div>
+
+    <div class="section">
+        <h2>特定测试项目（不计分）</h2>
+        <p>1. 限时烹饪测试：制作2-3道指定素食菜品</p>
+        <p>2. 盲味测试：识别常用调料和食材</p>
+        <p>3. 成本控制测试：在有限预算内设计菜品</p>
+    </div>
+
+    <div class="total-score">
+        总分：<span id="finalScore">0</span>
+    </div>
+
+    <script>
+        const sections = [
+            {
+                title: 'A. 基础素质评估',
+                weight: 0.20,
+                items: [
+                    {
+                        criteria: [
+                            '厨师服装规范穿着',
+                            '个人卫生习惯',
+                            '工作区域清洁维护',
+                            '守时情况',
+                            '工作态度认真程度',
+                            '对指导的接受度'
+                        ]
+                    }
+                ]
+            },
+            {
+                title: 'B. 专业技能评估',
+                weight: 0.50,
+                items: [
+                    {
+                        criteria: [
+                            '刀工技术',
+                            '火候控制',
+                            '调味准确性',
+                            '素食食材处理技巧',
+                            '素食烹饪特殊技术掌握',
+                            '菜品口味一致性',
+                            '菜品外观与标准一致性',
+                            '出品时间控制',
+                            '设备安全操作',
+                            '交叉污染防控意识'
+                        ]
+                    }
+                ]
+            },
+            {
+                title: 'C. 创新与团队评估',
+                weight: 0.30,
+                items: [
+                    {
+                        criteria: [
+                            '与团队协作程度',
+                            '指导厨师助手能力',
+                            '高峰期工作表现',
+                            '多任务处理能力',
+                            '特殊订单应对能力',
+                            '新菜开发潜力'
+                        ]
+                    }
+                ]
+            }
+        ]
+        function createStarRating(id) {
+            const stars = document.createElement('div');
+            stars.className = 'stars';
+            stars.id = id;
+            for (let i = 0; i < 5; i++) {
+                const star = document.createElement('span');
+                star.textContent = '☆';
+                star.dataset.value = i + 1;
+                star.onclick = function() {
+                    const parent = this.parentElement;
+                    const spans = parent.getElementsByTagName('span');
+                    const clickedValue = this.dataset.value;
+                    for (let j = 0; j < spans.length; j++) {
+                        spans[j].textContent = j < clickedValue ? '★' : '☆';
+                    }
+                    parent.dataset.rating = clickedValue;
+                    calculateTotalScore();
+                };
+                stars.appendChild(star);
+            }
+            return stars;
+        }
+
+        function calculateTotalScore() {
+            let totalScore = 0;
+            sections.forEach((section, sectionIndex) => {
+                let sectionScore = 0;
+                let totalCriteria = 0;
+                
+                section.items.forEach(item => {
+                    item.criteria.forEach((criterion, criterionIndex) => {
+                        const starDiv = document.getElementById(`stars-${sectionIndex}-${criterionIndex}`);
+                        const rating = parseInt(starDiv.dataset.rating || 0);
+                        sectionScore += rating;
+                        totalCriteria++;
+                    });
+                });
+                
+                // 计算该大项的平均分（100分制）
+                const averageSectionScore = totalCriteria > 0 ? (sectionScore / (totalCriteria * 5)) * 100 : 0;
+                // 计算加权分数
+                const weightedSectionScore = averageSectionScore * section.weight;
+                totalScore += weightedSectionScore;
+                
+                // 更新大项得分
+                const sectionScoreElement = document.getElementById(`section-score-${sectionIndex}`);
+                sectionScoreElement.textContent = `得分：${averageSectionScore.toFixed(2)}/100分`;
+            });
+            
+            document.getElementById('finalScore').textContent = totalScore.toFixed(2);
+        }
+
+        function renderScorecard() {
+            // 设置评分日期
+            const today = new Date();
+            document.getElementById('evaluationDate').textContent = `评分日期：${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
+            
+            const scorecard = document.getElementById('scorecard');
+            
+            sections.forEach((section, sectionIndex) => {
+                const sectionDiv = document.createElement('div');
+                sectionDiv.className = 'section';
+                
+                const header = document.createElement('h2');
+                header.textContent = `${section.title} (${section.weight * 100}%权重)`;
+                sectionDiv.appendChild(header);
+
+                const sectionScore = document.createElement('div');
+                sectionScore.className = 'category-score';
+                sectionScore.id = `section-score-${sectionIndex}`;
+                sectionScore.textContent = '得分：0.00';
+                sectionDiv.appendChild(sectionScore);
+
+                const table = document.createElement('table');
+                
+                section.items.forEach(item => {
+
+                    item.criteria.forEach((criterion, criterionIndex) => {
+                        const row = document.createElement('tr');
+                        
+                        const criterionCell = document.createElement('td');
+                        criterionCell.textContent = criterion;
+                        row.appendChild(criterionCell);
+                        
+                        const ratingCell = document.createElement('td');
+                        ratingCell.appendChild(createStarRating(`stars-${sectionIndex}-${criterionIndex}`));
+                        row.appendChild(ratingCell);
+                        
+                        table.appendChild(row);
+                    });
+                });
+
+                sectionDiv.appendChild(table);
+                scorecard.appendChild(sectionDiv);
+            });
+        }
+
+        renderScorecard();
+    </script>
+</body>
+</html>
+
+<script>
+        function shareToWhatsApp() {
+            const employeeName = document.getElementById('employeeName').value;
+            if (!employeeName) {
+                alert('请先输入员工姓名');
+                return;
+            }
+            
+            let message = `厨房厨师试用期评估结果\n员工：${employeeName}\n`;
+            message += `评分日期：${document.getElementById('evaluationDate').textContent.split('：')[1]}\n\n`;
+            
+            sections.forEach((section, index) => {
+                const score = document.getElementById(`section-score-${index}`).textContent.split('：')[1];
+                message += `${index + 1}. ${section.title.split('.')[1]}: ${score}\n`;
+            });
+            
+            message += `\n总分：${document.getElementById('finalScore').textContent}`;
+            
+            const encodedMessage = encodeURIComponent(message);
+            window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
+        }
+</script>
